@@ -7,6 +7,22 @@
 std::ifstream in("data.in");
 std::ofstream out("data.out");
 
+
+long long get_number_ocurencs(std::vector<long long> data, long long target) {
+
+    auto lower = std::lower_bound(data.begin(), data.end(), target);
+    auto upper = std::upper_bound(data.begin(), data.end(), target);
+    
+    if (lower != data.end() && *lower == target) {
+        
+        return upper - lower;
+    }
+    else {
+        return 0;
+    }
+
+}
+
 int main() {
     
     
@@ -50,7 +66,18 @@ int main() {
         dif += abs(first_list[i] - second_list[i]);
     }
     
-    out << dif;
+    out << "First: " << dif << std::endl;
+    
+    
+    long long similarity = 0;
+    
+    for (int i = 0; i < first_list.size(); i++) {
+        
+        similarity += first_list[i] * get_number_ocurencs(second_list, first_list[i]);
+        
+    }
+    
+    out << "Second: " << similarity;
     
     return 0;
 }
