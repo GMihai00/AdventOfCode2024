@@ -113,6 +113,62 @@ bool graph_contains_cycle(const std::vector<std::vector<int>>& initial_graph, co
     return false;
 }
 
+
+std::vector<int> get_top_sort(const std::vector<std::vector<int>>& initial_graph, const std::vector<int>& update) {
+
+    // graph doesn't contain cycle
+    
+    auto clone_graph(initial_graph);
+    
+    std::set<int> update_values(update.begin(), update.end());
+    
+    for (int i = 0; i < clone_graph.size(); i++) {
+        if (update_values.find(i) == update_values.end())
+            clone_graph[i].clear();
+    }
+    
+    // first top-sort the graph
+    
+    std::vector<bool> visited(clone_graph.size(), false);
+    std::vector<int> incoming_edge_degree(clone_graph.size(), 0);
+    std::vector<int> visited_order;
+    
+    for (int  i = 0; i < clone_graph.size(); i++) {
+        for (int j = 0; j < clone_graph[i].size(); j++)
+            incoming_edge_degree[clone_graph[i][j]]++;
+    }
+    
+    std::queue<int> to_visit;
+    
+    for (int i = 0; i < incoming_edge_degree.size(); i++)
+        if (incoming_edge_degree[i] == 0 && update_values.find(i) != update_values.end())
+            to_visit.push(i);
+            
+    while(!to_visit.empty()){
+    
+        int poz = to_visit.front();
+        to_visit.pop();
+        
+        if (update_values.find(poz) != update_values.end())
+            visited_order.push_back(poz);
+        
+        for (int i = 0; i < clone_graph[poz].size(); i++) {
+        
+            int neighbour = clone_graph[poz][i];
+            
+            incoming_edge_degree[neighbour]--;
+            
+            if (incoming_edge_degree[neighbour] == 0) {
+                
+                to_visit.push(neighbour);
+            }
+        }
+        
+    }
+    
+    return visited_order;
+}
+
 std::vector<std::vector<int>> graph_mapping(const std::vector<std::pair<int,int>>& rules) {
 
     int max_value = 0;
@@ -151,7 +207,7 @@ int main() {
     std::string line;
     
     long long rez = 0;
-    
+    long long rez2 = 0;
     int cnt = 0;
     
     while(std::getline(in, line)) {
@@ -186,11 +242,28 @@ int main() {
             rez += update[update.size() / 2];
             std::cout << "Line: " << cnt << " ok\n";
         }
+        else {
+            // good ordering is just removing your edges and parsing the rules graph as connected components
+            // the problem is ambigous as you have multiple ways to solve the solution described above
+            // for solving I'll just take the top-sort order
+            
+            auto top_sort_update = get_top_sort(rules_graph, update);
+            
+            rez2+= top_sort_update[update.size() / 2];
+            
+            std::cout << "Line: " << cnt << " not ok\n";
+            
+            for (int i = 0; i <  top_sort_update.size(); i++)
+                std::cout << top_sort_update[i] << " ";
+                
+            std::cout <<"\n\n";
+        }
         
         cnt ++;
     }
     
     out << "First: " << rez << std::endl;
     
+    out << "Second: " << rez2 << std::endl;
     return 0;
 }
