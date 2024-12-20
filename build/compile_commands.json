@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/gmihai00/Repos/AdventOfCode2025/build",
+  "command": "/usr/bin/g++  -I/home/gmihai00/Repos/AdventOfCode2025/day1/src -g -o CMakeFiles/day1.dir/src/main.cpp.o -c /home/gmihai00/Repos/AdventOfCode2025/day1/src/main.cpp",
+  "file": "/home/gmihai00/Repos/AdventOfCode2025/day1/src/main.cpp",
+  "output": "CMakeFiles/day1.dir/src/main.cpp.o"
+}
+]
