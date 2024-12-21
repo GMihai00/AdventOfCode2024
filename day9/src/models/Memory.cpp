@@ -31,6 +31,44 @@ void Memory::build_disk_space(const std::string & data)
     }
 }
 
+std::pair<std::vector<unsigned long long>,std::vector<unsigned long long>> Memory::determine_starting_positions_intervals()
+{
+    std::vector<unsigned long long> starting_poz_free_space;
+    std::vector<unsigned long long> starting_poz_occupied_space;
+    
+    unsigned long long current_poz = 0;
+    
+    short state = 1;
+    unsigned long long poz_occupied = 0;
+    unsigned long long poz_free = 0;
+    
+    while(poz_occupied < m_occupied_disk.size() || poz_free < m_free_space.size()) {
+    
+        if(state == 1) {
+            
+            starting_poz_occupied_space.push_back(current_poz);
+            
+            current_poz += m_occupied_disk[poz_occupied];
+            
+            poz_occupied++;
+            
+        } else {
+        
+            starting_poz_free_space.push_back(current_poz);
+            
+            current_poz += m_free_space[poz_free];
+        
+            poz_free++;
+        }
+        
+        state = 1 - state;
+    }
+    
+    
+    return {starting_poz_free_space, starting_poz_occupied_space};
+    
+}
+
 Memory::Memory(const std::string & data)
 {
     build_disk_space(data);
@@ -127,6 +165,76 @@ const unsigned long long Memory::get_checksum_first()
         }
         
         state = 1 - state;
+    }
+    
+    return rez;
+}
+
+const unsigned long long Memory::get_checksum_second()
+{
+    unsigned long long rez = 0;
+    
+    unsigned long long id_occupied_memory = m_occupied_disk.size() - 1;
+    
+    std::vector<unsigned long long> free_memory_copy = m_free_space;
+    
+    unsigned long long id_free_memory = 0;
+        
+    // need to keep track of each item interval start
+    // to do this create 2 lists beforehand with those values
+    auto start_poz = determine_starting_positions_intervals();
+    
+    auto& starting_poz_free_space = start_poz.first;
+    auto& starting_poz_occupied_space = start_poz.second;
+
+    while(id_occupied_memory >= 0) {
+        
+        auto len_interval_occupied_memory = m_occupied_disk[id_occupied_memory];
+        
+        bool found_fitting_slot = false;
+        
+        // need to optimize this search
+        // search possible values 
+        // aint on interval found, should be [left, total size]
+        // update intervals sizes
+        // update set intervals
+        // update aint
+        
+        for (int it = id_free_memory; it < id_occupied_memory; it++) {
+            if (free_memory_copy[it] >= len_interval_occupied_memory) {
+                // get starting poz + add checksum
+                auto start = starting_poz_free_space[it];
+                
+                auto par_sum = helpers::get_interval_sum(start, start + len_interval_occupied_memory - 1);
+                
+                rez += par_sum * id_occupied_memory;
+                
+                // update new starting position + free memory length
+                auto dif = free_memory_copy[it] - len_interval_occupied_memory;
+                
+                starting_poz_free_space[it] += len_interval_occupied_memory;
+                free_memory_copy[it] = dif;
+                
+                // stop searching
+                found_fitting_slot = true;
+                it = id_occupied_memory;
+            }
+        }
+        
+        while(id_free_memory < m_free_space.size() && m_free_space[id_free_memory] == 0)
+            id_free_memory++;
+        
+        if (!found_fitting_slot) {
+        
+            auto start = starting_poz_occupied_space[id_occupied_memory];
+            
+            auto par_sum = helpers::get_interval_sum(start, start + len_interval_occupied_memory - 1);
+                
+            rez += par_sum * id_occupied_memory;
+        
+        } 
+    
+        id_occupied_memory--;
     }
     
     return rez;

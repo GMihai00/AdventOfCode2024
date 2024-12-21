@@ -12,7 +12,7 @@ void solve_first(std::shared_ptr<Memory> memory, std::ofstream& out) {
 
 void solve_second(std::shared_ptr<Memory> memory, std::ofstream& out) {
 
-    auto rez = memory->get_checksum_first();
+    auto rez = memory->get_checksum_second();
     
     out << "Second: " << rez;
 }
@@ -39,4 +39,5 @@ int main() {
     
     solve_first(memory, out);
     
+    solve_second(memory, out);
 }
