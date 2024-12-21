@@ -174,7 +174,7 @@ const unsigned long long Memory::get_checksum_second()
 {
     unsigned long long rez = 0;
     
-    unsigned long long id_occupied_memory = m_occupied_disk.size() - 1;
+    int id_occupied_memory = m_occupied_disk.size() - 1;
     
     std::vector<unsigned long long> free_memory_copy = m_free_space;
     
@@ -193,13 +193,6 @@ const unsigned long long Memory::get_checksum_second()
         
         bool found_fitting_slot = false;
         
-        // need to optimize this search
-        // search possible values 
-        // aint on interval found, should be [left, total size]
-        // update intervals sizes
-        // update set intervals
-        // update aint
-        
         for (int it = id_free_memory; it < id_occupied_memory; it++) {
             if (free_memory_copy[it] >= len_interval_occupied_memory) {
                 // get starting poz + add checksum
@@ -207,7 +200,7 @@ const unsigned long long Memory::get_checksum_second()
                 
                 auto par_sum = helpers::get_interval_sum(start, start + len_interval_occupied_memory - 1);
                 
-                rez += par_sum * id_occupied_memory;
+                rez += par_sum * (unsigned long long) id_occupied_memory;
                 
                 // update new starting position + free memory length
                 auto dif = free_memory_copy[it] - len_interval_occupied_memory;
@@ -221,7 +214,7 @@ const unsigned long long Memory::get_checksum_second()
             }
         }
         
-        while(id_free_memory < m_free_space.size() && m_free_space[id_free_memory] == 0)
+        while(id_free_memory < free_memory_copy.size() && free_memory_copy[id_free_memory] == 0)
             id_free_memory++;
         
         if (!found_fitting_slot) {
@@ -230,10 +223,10 @@ const unsigned long long Memory::get_checksum_second()
             
             auto par_sum = helpers::get_interval_sum(start, start + len_interval_occupied_memory - 1);
                 
-            rez += par_sum * id_occupied_memory;
+            rez += par_sum * (unsigned long long) id_occupied_memory;
         
         } 
-    
+        
         id_occupied_memory--;
     }
     
