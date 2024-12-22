@@ -72,63 +72,6 @@ void StoneLine::collect_stone_values(const std::string & line)
     }
 }
 
-std::pair<int,std::vector<std::string>> StoneLine::get_precomputed_value(const std::string& stone, const int blinks_left)
-{
-    if (auto it = m_available_blink_sizes.find(stone); it != m_available_blink_sizes.end()) {
-        
-        if (auto it2 = it->second.lower_bound(-blinks_left); it2 != it->second.end()){
-            
-            auto stone_copy = stone;
-            auto number = *it2;
-            std::pair<std::string, int> entry = std::make_pair(stone_copy, number);
-            
-            if (auto it3 = m_blink_map.find(entry); it3 != m_blink_map.end()) {
-                return {number, it3->second};
-            }
-            else {
-                throw std::runtime_error("something went wrong with set-map sync");
-                
-            }
-        }
-    }
-
-    return {0, {}};
-}
-
-std::vector<std::string> StoneLine::blink_recursive(const std::string& stone, const int blinks_left)
-{
-    std::vector<std::string> rez;
-    
-    if (blinks_left < 0)
-        throw std::runtime_error("something went bad");
-        
-    if (blinks_left == 0)
-        return {stone}; // no more need for blinks
-    
-    auto value = get_precomputed_value(stone, blinks_left);
-    
-    if (value.first != blinks_left)
-    {
-        // std::cout << stone << std::endl;
-        auto stones = apply_rule_to_stone(stone);
-        
-        for (const auto& stn : stones) {
-            auto blink_rez = blink_recursive(stn, blinks_left - 1);
-            rez.insert(rez.end(), blink_rez.begin(), blink_rez.end());
-        }
-    }
-    else {
-        rez.insert(rez.end(), value.second.begin(), value.second.end());
-    }
-    
-    auto stone_copy = stone;
-    std::pair<std::string, int> entry = std::make_pair(stone_copy, -blinks_left);
-    
-    m_blink_map[entry] = rez;
-    m_available_blink_sizes[stone].insert(-blinks_left);
-    
-    return rez;
-}
 
 StoneLine::StoneLine(const std::string& line)
 {
@@ -154,27 +97,39 @@ const long long StoneLine::solve_first()
     return rez;
 }
 
-const long long StoneLine::solve_second()
+const unsigned long long StoneLine::solve_second()
 {
-    long long rez = 0;
+    
+    std::map<std::string, unsigned long long> freq_map;
+    
     for (const auto& stone : m_stones) {
+        freq_map[stone]++;
+    }
+    
+    
+    for (int i = 0; i < 75; i++) {
+        std::map<std::string, unsigned long long> new_freq_map;
         
-        std::vector<std::string> stone_cpy = {stone};
-        
-        for (int i = 1; i <= 15; i++) {
-            std::vector<std::string> new_stone_copy;
+        for (const auto& it : freq_map) {
+            auto stone = it.first;
+            auto freq = it.second;
             
-            for (const auto& stone : stone_cpy) {
-                auto blink_rez = blink_recursive(stone, 5);
-                new_stone_copy.insert(new_stone_copy.end(), blink_rez.begin(), blink_rez.end());
+            auto stones = apply_rule_to_stone(stone);
+            
+            for (const auto& stn : stones) {
+                new_freq_map[stn]+=freq;
             }
-            
-            stone_cpy = new_stone_copy;
             
         }
         
-        rez += stone_cpy.size();
+        freq_map = new_freq_map;
         
+    }
+    
+    unsigned long long rez = 0;
+    
+    for (const auto& it : freq_map) {
+        rez += it.second;
     }
     
     return rez;
