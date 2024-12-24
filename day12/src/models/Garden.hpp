@@ -21,7 +21,7 @@ private:
     
     const std::vector<std::pair<int, int>> get_edge_follow_directions(const std::pair<int, int> edge_direction);
     
-    const long long count_number_edges(const std::vector<std::vector<bool>>& is_edge);
+    const long long count_number_edges(const std::vector<std::vector<int>>& is_edge);
     
     const bool is_inside_map(const std::pair<int, int>& poz);
 public:
