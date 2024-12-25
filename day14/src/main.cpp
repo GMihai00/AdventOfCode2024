@@ -61,7 +61,7 @@ std::optional<short> get_quadrant(const std::pair<int, int> pos) {
     
 }
 
-void solve_first(const std::vector<std::shared_ptr<Robot>>& robots, std::ofstream& out) {
+void solve_first(const std::vector<std::shared_ptr<Robot>>& robots, std::ofstream& out, bool display_map = false) {
 
     long long rez = 1;
     
@@ -85,6 +85,77 @@ void solve_first(const std::vector<std::shared_ptr<Robot>>& robots, std::ofstrea
     }
     
     out << "First: " << rez << std::endl;
+    
+    if (display_map) {
+        for (int i = 0; i < GRID_HEIGHT; i++) {
+            for (int j = 0; j < GRID_WIDTH; j++)
+            {
+                if (i == GRID_HEIGHT / 2 || j == GRID_WIDTH / 2)
+                    out << " ";
+                else
+                    out << final_map[i][j];
+            }
+                
+            out << std::endl;
+        }
+    }
+}
+
+bool can_apply_kernel( const std::vector<std::vector<int>>& final_map, const std::pair<int, int> size = {5, 5}) {
+
+    for (int i = 0; i < final_map.size() - size.first; i++)
+    {
+        for (int j = 0; j < final_map[i].size() - size.second; j++) {
+            bool ok = true;
+            
+            for (int p = 0; p < 5; p++) {
+                for (int f = 0; f < 5; f++) {
+                    if (final_map[i + p][j + f] == 0) {
+                        ok = false;
+                        p = 5;
+                        f = 5;
+                    }
+                }
+            }
+            
+            if (ok == true)
+                return true;
+            
+        }
+    }
+    
+    return false;
+}
+
+
+void solve_second(const std::vector<std::shared_ptr<Robot>>& robots, std::ofstream& out) {
+
+    long long rez = 0;    
+    bool tree_found = false;
+    
+    std::vector<std::vector<int>> final_map;
+    
+    while(!tree_found) {
+        
+        final_map = std::vector<std::vector<int>>(GRID_HEIGHT, std::vector<int>(GRID_WIDTH, 0));
+        
+        for (const auto& robot : robots) {
+            
+            auto next_pos = robot->get_next_position(rez);
+            
+            final_map[next_pos.first][next_pos.second]++;
+        
+        }
+        
+        if (can_apply_kernel(final_map)) {
+            tree_found = true;
+        }
+        else {
+            rez++;
+        }
+    }
+    
+    out << "Second: " << rez << std::endl;
     
     for (int i = 0; i < GRID_HEIGHT; i++) {
         for (int j = 0; j < GRID_WIDTH; j++)
@@ -115,4 +186,6 @@ int main() {
     auto robots = build_robots(data);
     
     solve_first(robots, out);
+    
+    solve_second(robots, out);
 }
